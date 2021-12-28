@@ -3,6 +3,8 @@
 #include <iostream>
 #include "./Objects/Player.cpp"
 #include "./Objects/Menu.cpp"
+#include "./Objects/Bomb.cpp"
+#include "./Objects/Heart.cpp"
 
 int main()
 {
@@ -10,9 +12,20 @@ int main()
     window.setFramerateLimit(60);
 
     Menu menu;
+    Bomb* bomb[3];
 
-    Player player;
+    bomb[0] = new Bomb(100, 50);
+    bomb[1] = new Bomb(1000, 145);
+    bomb[2] = new Bomb(1180, 690);
+
+    Heart *heart[2];
+
+    heart[0] = new Heart(40, 450);
+    heart[1] = new Heart(700, 475);
+
     Map map;
+    Wall wall;
+    Player player(&wall);
 
     float dX = 0;
     float dY = 0;
@@ -57,9 +70,27 @@ int main()
 
             map.draw(window);
 
+            wall.draw(window);
+
             player.update(frameTime.asMilliseconds());
             player.drag(pos.x - dX, pos.y - dY);
             player.draw(window);
+
+            for (int i = 0; i < 3; i++) {
+                if (bomb[i]->getIsAlive() && player.getPosition().intersects(bomb[i]->getPosition())) {
+                    player.blowUp();
+                    bomb[i]->blowUp();
+                }
+                bomb[i]->draw(window);
+            }
+
+            for (int i = 0; i < 2; i++) {
+                if (heart[i]->getIsAlive() && player.getPosition().intersects(heart[i]->getPosition())) {
+                    player.heal();
+                    heart[i]->heal();
+                }
+                heart[i]->draw(window);
+            }
         } else {
             if (event.type == sf::Event::MouseButtonPressed)
                 if (event.key.code == sf::Mouse::Left) {

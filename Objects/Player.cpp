@@ -1,14 +1,19 @@
 #include <SFML/Graphics.hpp>
+#include <SFML/Audio.hpp>
 #include "./Map.cpp"
+#include "./Wall.cpp"
 
 class Player {
     private:
         Map *map = new Map();
+        Wall *wall;
         sf::Sprite sprite;
 
         sf::RectangleShape healthRect;
         float health = 100;
 
+        sf::SoundBuffer hitSoundBuffer;
+        sf::Sound hitSound;
         sf::Texture idle; // 0
         sf::Texture attack; // 1
         sf::Texture death; // 2
@@ -34,6 +39,11 @@ class Player {
 
     bool isAlive = true;
         bool onGround = false;
+
+    void loadSound() {
+        hitSoundBuffer.loadFromFile("..\\Textures\\hitSound.wav");
+        hitSound.setBuffer(hitSoundBuffer);
+    }
 
     void loadTextures() {
         idle.loadFromFile("..\\Textures\\Idle.png");
@@ -69,11 +79,14 @@ class Player {
                 break;
             case 2:
                 if (spriteNum < 3) spriteNum++;
-                else spriteNum = 0;
                 break;
             case 3:
-                if (spriteNum < 2) spriteNum++;
-                else spriteNum = 0;
+                if (spriteNum < 1) spriteNum++;
+                else {
+                    currentSprite = -1;
+                    spriteDelayFrames = 80;
+                    stay();
+                }
                 break;
             case 4:
                 if (spriteNum < 5) spriteNum++;
@@ -101,8 +114,28 @@ class Player {
 
     sf::Rect<float> getPosition() { return sprite.getGlobalBounds(); }
 
+    void blowUp() {
+        health -= 50;
+        if (!isAlive) return;
+        if (currentSprite != 3) {
+            currentSprite = 3;
+            spriteDelayFrames = 250;
+            sprite.setTexture(hurt);
+            spriteWidth = 81;
+            spriteHeight = 85;
+            spriteNum = 0;
+        }
+    }
+
+    void heal() {
+        health += 50;
+        if (health > 100) {
+            health = 100;
+        }
+    }
+
     void stay() {
-        if (!isAlive || currentSprite == 1) return;
+        if (!isAlive || currentSprite == 1 || currentSprite == 3) return;
         if (currentSprite != 0) {
             currentSprite = 0;
             sprite.setTexture(idle);
@@ -127,7 +160,15 @@ class Player {
     void hit() {
         if (!isAlive) return;
         if (currentSprite != 1) {
+            sf::Rect<float> r = getPosition();
+            if (!walkDirection) {
+                r = sf::Rect<float>(r.left, r.top, r.width + 20, r.height);
+            } else {
+                r = sf::Rect<float>(r.left - 20, r.top, r.width, r.height);
+            }
+            wall->hit(r);
             currentSprite = 1;
+            hitSound.play();
             sprite.setTexture(attack);
             spriteWidth = 103;
             spriteHeight = 97;
@@ -136,7 +177,7 @@ class Player {
     }
 
     void walkRight() {
-        if (!isAlive) return;
+        if (!isAlive || currentSprite == 3) return;
         dx += 5;
         walkDirection = 0;
         if (currentSprite != 4) {
@@ -149,7 +190,7 @@ class Player {
     }
 
     void walkLeft() {
-        if (!isAlive) return;
+        if (!isAlive || currentSprite == 3) return;
         dx -= 5;
         walkDirection = 1;
         if (currentSprite != 4) {
@@ -168,8 +209,10 @@ class Player {
         }
     }
 
-    Player() {
+    Player(Wall * wall) {
+        this->wall = wall;
         loadTextures();
+        loadSound();
         stay();
 
         healthRect.setFillColor(sf::Color::Green);
@@ -186,7 +229,6 @@ class Player {
     void setIsDrag(bool flag) { isDragging = flag; }
 
     void update(float ms) {
-        std::cout << currentSprite << std::endl;
         nextSprite(ms);
         if (!walkDirection) {
             sprite.setTextureRect(sf::Rect<int>(spriteNum * spriteWidth, 0, spriteWidth, spriteHeight));
@@ -198,7 +240,7 @@ class Player {
         handleGravity(ms);
 
         sf::Rect<float> rect = sf::Rect<float>(x + dx, y, spriteWidth, spriteHeight);
-        if (!map->isNextCollide(rect)) {
+        if (!map->isNextCollide(rect) && !wall->isNextCollide(rect)) {
             x += dx;
             if (dx < -5) {
                 dx += 5;
@@ -212,7 +254,7 @@ class Player {
         }
 
         //health -= 0.5;
-        if (health < 0) {
+        if (health < 0.1) {
             die();
         }
         sprite.setPosition(x, y);
