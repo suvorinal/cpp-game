@@ -85,6 +85,7 @@ class Player {
                 else {
                     currentSprite = -1;
                     spriteDelayFrames = 80;
+                    y -= 12;
                     stay();
                 }
                 break;
@@ -203,7 +204,7 @@ class Player {
     }
 
     void jump() {
-        if (onGround && isAlive) {
+        if (onGround && isAlive && currentSprite != 1 && currentSprite != 3) {
             aY = -250;
             onGround = false;
         }
