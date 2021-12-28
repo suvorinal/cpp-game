@@ -18,21 +18,22 @@ class Player {
         int spriteNum = 0;
         int spriteWidth = 84;
         int spriteHeight = 97;
-        int spriteDelay = 0;
-        int spriteDelayFrames = 8;
+        float spriteDelay = 0;
+        float spriteDelayFrames = 80;
 
         int walkDirection = 0;
 
         float x = 200;
         float y = 200;
-        float dy = 0;
+        float vy = 0;
         float dx = 0;
+        float mass = 1.25;
+        float const g = 9.81;
+        float aY = 0;
+        bool isDragging = false;
 
-        bool isAlive = true;
+    bool isAlive = true;
         bool onGround = false;
-    public:
-
-    sf::Rect<float> getPosition() { return sprite.getGlobalBounds(); }
 
     void loadTextures() {
         idle.loadFromFile("..\\Textures\\Idle.png");
@@ -42,8 +43,66 @@ class Player {
         walk.loadFromFile("..\\Textures\\Walk.png");
     }
 
+    bool isCollideWithMap(float x, float y) {
+        sf::Rect<float> rect(x, y, spriteWidth-1, spriteHeight);
+        return map->isNextCollide(rect);
+    }
+
+    void nextSprite(float ms) {
+        spriteDelay += ms;
+        if (spriteDelay < spriteDelayFrames) {
+            return;
+        } else {
+            spriteDelay = 0;
+        }
+        switch (currentSprite) {
+            case 0:
+                if (spriteNum < 2) spriteNum++;
+                else spriteNum = 0;
+                break;
+            case 1:
+                if (spriteNum < 3) spriteNum++;
+                else {
+                    currentSprite = -1;
+                    stay();
+                }
+                break;
+            case 2:
+                if (spriteNum < 3) spriteNum++;
+                else spriteNum = 0;
+                break;
+            case 3:
+                if (spriteNum < 2) spriteNum++;
+                else spriteNum = 0;
+                break;
+            case 4:
+                if (spriteNum < 5) spriteNum++;
+                else spriteNum = 0;
+                break;
+        }
+    }
+
+    void handleGravity(float ms) {
+        if (!ms) return;
+        vy += (g + aY) / (ms * mass);
+        float tempY = y + vy;
+        onGround = isCollideWithMap(x, tempY);
+        if (onGround) {
+            aY = 0;
+            vy = 0;
+        } else {
+            y = tempY;
+            aY--;
+            if (aY < 0) aY = 0;
+        }
+    }
+
+    public:
+
+    sf::Rect<float> getPosition() { return sprite.getGlobalBounds(); }
+
     void stay() {
-        if (!isAlive) return;
+        if (!isAlive || currentSprite == 1) return;
         if (currentSprite != 0) {
             currentSprite = 0;
             sprite.setTexture(idle);
@@ -56,11 +115,22 @@ class Player {
     void die() {
         isAlive = false;
         if (currentSprite != 2) {
-            spriteDelayFrames = 25;
+            spriteDelayFrames = 800;
             currentSprite = 2;
             sprite.setTexture(death);
             spriteWidth = 94;
             spriteHeight = 75;
+            spriteNum = 0;
+        }
+    }
+
+    void hit() {
+        if (!isAlive) return;
+        if (currentSprite != 1) {
+            currentSprite = 1;
+            sprite.setTexture(attack);
+            spriteWidth = 103;
+            spriteHeight = 97;
             spriteNum = 0;
         }
     }
@@ -93,38 +163,8 @@ class Player {
 
     void jump() {
         if (onGround && isAlive) {
-            dy -= 50;
+            aY = -250;
             onGround = false;
-        }
-    }
-
-    void nextSprite() {
-        if (spriteDelay < spriteDelayFrames) {
-            spriteDelay++;
-            return;
-        } else {
-            spriteDelay = 0;
-        }
-        switch (currentSprite) {
-            case 0:
-                if (spriteNum < 2) spriteNum++;
-                else spriteNum = 0;
-                break;
-            case 1:
-                if (spriteNum < 3) spriteNum++;
-                else spriteNum = 0;
-                break;
-            case 2:
-                if (spriteNum < 3) spriteNum++;
-                break;
-            case 3:
-                if (spriteNum < 2) spriteNum++;
-                else spriteNum = 0;
-                break;
-            case 4:
-                if (spriteNum < 5) spriteNum++;
-                else spriteNum = 0;
-                break;
         }
     }
 
@@ -136,28 +176,28 @@ class Player {
         healthRect.setSize(sf::Vector2<float>(health, 25.0));
     }
 
-    void update() {
-        nextSprite();
+    void drag(float dx, float dy) {
+        if (isDragging) {
+            x = dx;
+            y = dy;
+            sprite.setPosition(x, y);
+        }
+    }
+    void setIsDrag(bool flag) { isDragging = flag; }
+
+    void update(float ms) {
+        std::cout << currentSprite << std::endl;
+        nextSprite(ms);
         if (!walkDirection) {
             sprite.setTextureRect(sf::Rect<int>(spriteNum * spriteWidth, 0, spriteWidth, spriteHeight));
         } else {
             sprite.setTextureRect(sf::Rect<int>(spriteWidth + spriteNum * spriteWidth, 0, -spriteWidth, spriteHeight));
         }
-        if (!isAlive) return;
-        float prevY = y;
-        if (dy > 10) y += 10;
-        else if (dy < -10) y += -10;
-        else y += dy;
-        sf::Rect<float> rect(x, y, spriteWidth-1, spriteHeight);
-        if (map->isNextCollide(rect)) {
-            y = prevY;
-            onGround = true;
-            dy = 0;
-        } else {
-            dy += 5;
-        }
+        if (!isAlive || isDragging) return;
 
-        rect = sf::Rect<float>(x + dx, y, spriteWidth, spriteHeight);
+        handleGravity(ms);
+
+        sf::Rect<float> rect = sf::Rect<float>(x + dx, y, spriteWidth, spriteHeight);
         if (!map->isNextCollide(rect)) {
             x += dx;
             if (dx < -5) {
@@ -171,7 +211,7 @@ class Player {
             dx = 0;
         }
 
-        health -= 0.5;
+        //health -= 0.5;
         if (health < 0) {
             die();
         }

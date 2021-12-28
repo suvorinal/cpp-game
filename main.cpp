@@ -2,33 +2,26 @@
 #include <SFML/Graphics.hpp>
 #include <iostream>
 #include "./Objects/Player.cpp"
-#include "./Objects/Bomb.cpp"
+#include "./Objects/Menu.cpp"
 
 int main()
 {
     sf::RenderWindow window(sf::VideoMode(1280, 800), "SFML window");
     window.setFramerateLimit(60);
 
+    Menu menu;
 
     Player player;
     Map map;
 
-    Bomb bomb;
-
-    int delay = 0;
     float dX = 0;
     float dY = 0;
 
-    while (window.isOpen())
-    {
-        if (delay < 2) {
-            delay++;
-            continue;
-        } else {
-            delay = 0;
-        }
+    sf::Clock clock;
+    sf::Time frameTime{ sf::Time::Zero };
 
 
+    while (window.isOpen()) {
         sf::Event event;
         while (window.pollEvent(event))
         {
@@ -39,31 +32,49 @@ int main()
         sf::Vector2i pixelPos = sf::Mouse::getPosition(window);
         sf::Vector2f pos = window.mapPixelToCoords(pixelPos);
 
-        if (event.type == sf::Event::MouseButtonPressed)
-            if (event.key.code == sf::Mouse::Left)
-                if (bomb.getPosition().contains(pos.x, pos.y)) {
-                    bomb.setMove(true);
-                    dX = pos.x - bomb.getPosition().left;
-                    dY = pos.y - bomb.getPosition().top;
+        window.clear(sf::Color(255, 255, 255, 255));
+
+        if (!menu.getIsOpen()) {
+
+            if (event.type == sf::Event::MouseButtonPressed)
+                if (event.key.code == sf::Mouse::Left)
+                    if (player.getPosition().contains(pos.x, pos.y)) {
+                        player.setIsDrag(true);
+                        dX = pos.x - player.getPosition().left;
+                        dY = pos.y - player.getPosition().top;
+                    }
+
+            if (event.type == sf::Event::MouseButtonReleased)
+                if (event.key.code == sf::Mouse::Left)
+                    player.setIsDrag(false);
+
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape)) menu.open();
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::W)) player.jump();
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::F)) player.hit();
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) player.walkRight();
+            else if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) player.walkLeft();
+            else player.stay();
+
+            map.draw(window);
+
+            player.update(frameTime.asMilliseconds());
+            player.drag(pos.x - dX, pos.y - dY);
+            player.draw(window);
+        } else {
+            if (event.type == sf::Event::MouseButtonPressed)
+                if (event.key.code == sf::Mouse::Left) {
+                    bool isCloseWindow = menu.isCloseWindow(pos.x, pos.y);
+                    if (isCloseWindow) {
+                        window.close();
+                    }
                 }
 
-        if (event.type == sf::Event::MouseButtonReleased)
-            if (event.key.code == sf::Mouse::Left)
-                bomb.setMove(false);
+            menu.onMouseOver(pos.x, pos.y);
+            menu.update();
+            menu.draw(window);
+        }
 
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up)) player.jump();
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) player.walkRight();
-        else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) player.walkLeft();
-        else player.stay();
-        window.clear(sf::Color(255,255,255,255));
-
-        map.draw(window);
-        player.update();
-        player.draw(window);
-
-        bomb.update(pos.x - dX, pos.y - dY);
-        bomb.draw(window);
-
+        frameTime = clock.restart();
         window.display();
     }
 

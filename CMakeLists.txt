@@ -4,7 +4,7 @@ project (cpp_game)
 set(CMAKE_CXX_STANDARD 14)
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libstdc++ -static-libgcc -static")
 
-add_executable(cpp_game main.cpp Objects/Player.cpp Objects/Map.cpp Objects/Bomb.cpp)
+add_executable(cpp_game main.cpp Objects/Player.cpp Objects/Map.cpp Objects/Menu.cpp)
 
 set(SFML_STATIC_LIBRARIES TRUE)
 set(SFML_DIR C:/SFML/lib/cmake/SFML)
