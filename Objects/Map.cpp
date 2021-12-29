@@ -14,13 +14,13 @@ class Map {
         sf::Sprite bgSprite;
 
         std::string map[Height] = {
-                "                                       6",
-                "                                       6",
-                "                                       6",
-                "                                       6",
-                "33331                                  6",
-                "00000                                  6",
-                "7        2331                          6",
+                "0000000000000000000000000000000000000000",
+                "7                                      6",
+                "7                                      6",
+                "7                                      6",
+                "7                                      6",
+                "03331                                  6",
+                "00000    2331                          6",
                 "7        00001               23333333330",
                 "7                            00000000000",
                 "7                                      6",
@@ -59,7 +59,7 @@ class Map {
             sprite.setTexture(tiles);
         }
 
-        bool isNextCollide(sf::Rect<float> &rect) {
+        bool isNextCollide(sf::Rect<float> rect) {
             bool flag = false;
             for (int i = 0; i < Height; i++) {
                 for (int j = 0; j < Width; j++) {

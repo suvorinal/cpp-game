@@ -53,11 +53,6 @@ class Player {
         walk.loadFromFile("..\\Textures\\Walk.png");
     }
 
-    bool isCollideWithMap(float x, float y) {
-        sf::Rect<float> rect(x, y, spriteWidth-1, spriteHeight);
-        return map->isNextCollide(rect);
-    }
-
     void nextSprite(float ms) {
         spriteDelay += ms;
         if (spriteDelay < spriteDelayFrames) {
@@ -100,8 +95,10 @@ class Player {
         if (!ms) return;
         vy += (g + aY) / (ms * mass);
         float tempY = y + vy;
-        onGround = isCollideWithMap(x, tempY);
-        if (onGround) {
+        sf::Rect<float> rect = sf::Rect<float>(x, tempY + spriteHeight - 1, spriteWidth - 1, 1);
+        sf::Rect<float> rect2 = sf::Rect<float>(x, tempY, spriteWidth - 1, 1);
+        onGround = map->isNextCollide(rect) || wall->isNextCollide(rect);
+        if (onGround || map->isNextCollide(rect2) || wall->isNextCollide(rect2)) {
             aY = 0;
             vy = 0;
         } else {
@@ -163,9 +160,9 @@ class Player {
         if (currentSprite != 1) {
             sf::Rect<float> r = getPosition();
             if (!walkDirection) {
-                r = sf::Rect<float>(r.left, r.top, r.width + 20, r.height);
+                r = sf::Rect<float>(r.left, r.top  + r.height / 2, r.width + 20, 1);
             } else {
-                r = sf::Rect<float>(r.left - 20, r.top, r.width, r.height);
+                r = sf::Rect<float>(r.left - 20, r.top + r.height / 2, r.width, 1);
             }
             wall->hit(r);
             currentSprite = 1;
@@ -178,7 +175,7 @@ class Player {
     }
 
     void walkRight() {
-        if (!isAlive || currentSprite == 3) return;
+        if (!isAlive || currentSprite == 3 || currentSprite == 1) return;
         dx += 5;
         walkDirection = 0;
         if (currentSprite != 4) {
@@ -191,7 +188,7 @@ class Player {
     }
 
     void walkLeft() {
-        if (!isAlive || currentSprite == 3) return;
+        if (!isAlive || currentSprite == 3 || currentSprite == 1) return;
         dx -= 5;
         walkDirection = 1;
         if (currentSprite != 4) {
@@ -221,13 +218,23 @@ class Player {
     }
 
     void drag(float dx, float dy) {
-        if (isDragging) {
+        sf::Rect<float> rect = sf::Rect<float>(dx, dy, spriteWidth, spriteHeight);
+        if (isDragging
+        && isAlive
+        && !map->isNextCollide(sf::Rect<float>(dx, dy, spriteWidth, spriteHeight))
+        && !wall->isNextCollide(rect)
+        && dx > 0
+        && dx < 1280
+        && dy > 0
+        && dy < 800
+        ) {
             x = dx;
             y = dy;
             sprite.setPosition(x, y);
         }
     }
     void setIsDrag(bool flag) { isDragging = flag; }
+    bool isDrag() { return isDragging; }
 
     void update(float ms) {
         nextSprite(ms);
@@ -236,27 +243,30 @@ class Player {
         } else {
             sprite.setTextureRect(sf::Rect<int>(spriteWidth + spriteNum * spriteWidth, 0, -spriteWidth, spriteHeight));
         }
-        if (!isAlive || isDragging) return;
+        if (isDragging) return;
 
         handleGravity(ms);
 
-        sf::Rect<float> rect = sf::Rect<float>(x + dx, y, spriteWidth, spriteHeight);
-        if (!map->isNextCollide(rect) && !wall->isNextCollide(rect)) {
-            x += dx;
-            if (dx < -5) {
-                dx += 5;
-            } else if (dx > 5) {
-                dx -= 5;
+        if (isAlive) {
+
+            sf::Rect<float> rect = sf::Rect<float>(x + dx, y, spriteWidth, spriteHeight);
+            if (!map->isNextCollide(rect) && !wall->isNextCollide(rect)) {
+                x += dx;
+                if (dx < -5) {
+                    dx += 5;
+                } else if (dx > 5) {
+                    dx -= 5;
+                } else {
+                    dx = 0;
+                }
             } else {
                 dx = 0;
             }
-        } else {
-            dx = 0;
-        }
 
-        //health -= 0.5;
-        if (health < 0.1) {
-            die();
+            //health -= 0.5;
+            if (health < 0.1) {
+                die();
+            }
         }
         sprite.setPosition(x, y);
     }

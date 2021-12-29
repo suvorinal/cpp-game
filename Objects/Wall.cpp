@@ -13,7 +13,7 @@ private:
         wallT.loadFromFile("..\\Textures\\wall.png");
         wall.setTexture(wallT);
         wall.setScale(0.25, 0.25);
-        wall.setPosition(45, 50);
+        wall.setPosition(500, 685);
     }
 
 public:

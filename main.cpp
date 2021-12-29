@@ -11,10 +11,16 @@ int main()
     sf::RenderWindow window(sf::VideoMode(1280, 800), "SFML window");
     window.setFramerateLimit(60);
 
+    sf::Texture NobodyTouchSUNTexture;
+    NobodyTouchSUNTexture.loadFromFile("..\\Textures\\sun.png");
+    sf::Sprite NobodyTouchSUN;
+    NobodyTouchSUN.setTexture(NobodyTouchSUNTexture);
+    NobodyTouchSUN.setPosition(490, 0);
+
     Menu menu;
     Bomb* bomb[3];
 
-    bomb[0] = new Bomb(100, 50);
+    bomb[0] = new Bomb(100, 82);
     bomb[1] = new Bomb(1000, 145);
     bomb[2] = new Bomb(1180, 690);
 
@@ -69,6 +75,7 @@ int main()
             else player.stay();
 
             map.draw(window);
+            window.draw(NobodyTouchSUN);
 
             wall.draw(window);
 
@@ -77,7 +84,7 @@ int main()
             player.draw(window);
 
             for (int i = 0; i < 3; i++) {
-                if (bomb[i]->getIsAlive() && player.getPosition().intersects(bomb[i]->getPosition())) {
+                if (!player.isDrag() && bomb[i]->getIsAlive() && player.getPosition().intersects(bomb[i]->getPosition())) {
                     player.blowUp();
                     bomb[i]->blowUp();
                 }
@@ -85,7 +92,7 @@ int main()
             }
 
             for (int i = 0; i < 2; i++) {
-                if (heart[i]->getIsAlive() && player.getPosition().intersects(heart[i]->getPosition())) {
+                if (!player.isDrag() && heart[i]->getIsAlive() && player.getPosition().intersects(heart[i]->getPosition())) {
                     player.heal();
                     heart[i]->heal();
                 }
