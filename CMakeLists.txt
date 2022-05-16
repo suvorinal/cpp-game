@@ -2,13 +2,11 @@ cmake_minimum_required(VERSION 3.21)
 project (cpp_game)
 
 set(CMAKE_CXX_STANDARD 14)
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libstdc++ -static-libgcc -static")
 
-add_executable(cpp_game main.cpp Objects/Player.cpp Objects/Map.cpp Objects/Menu.cpp Objects/Wall.cpp Objects/Bomb.cpp Objects/Heart.cpp)
+add_executable(cpp_game main.cpp Objects/Bomb.h Objects/Bomb.cpp Objects/Heart.h Objects/Heart.cpp Objects/Map.h Objects/Map.cpp Objects/Player.h Objects/Wall.h Objects/Wall.cpp Objects/Player.cpp)
 
-set(SFML_STATIC_LIBRARIES TRUE)
-set(SFML_DIR C:/SFML/lib/cmake/SFML)
-find_package(SFML COMPONENTS system window graphics audio network REQUIRED)
+include_directories(/usr/local/include)
 
-include_directories(c:/SFML/include)
+find_package(SFML 2.5.1 COMPONENTS system window graphics network audio REQUIRED)
+include_directories(${SFML_INCLUDE_DIRS})
 target_link_libraries(cpp_game sfml-system sfml-window sfml-graphics sfml-audio sfml-network)

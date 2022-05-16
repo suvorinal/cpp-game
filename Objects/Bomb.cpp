@@ -1,38 +1,32 @@
-#include <SFML/Graphics.hpp>
+#include "Bomb.h"
 
-class Bomb {
-private:
-    float x = 0, y = 0;
-    sf::Texture t;
-    sf::Sprite sprite;
+Bomb::Bomb(float x, float y) {
+    isAlive = true;
 
-    bool isAlive = true;
+    this->x = x;
+    this->y = y;
+    loadTexture();
+    sprite.setPosition(x, y);
+    sprite.setScale(0.5, 0.5);
+}
 
-    void loadTexture() {
-        t.loadFromFile("..\\Textures\\bomb.png");
-        sprite.setTexture(t);
+void Bomb::blowUp() {
+    isAlive = false;
+}
+
+void Bomb::loadTexture() {
+    t.loadFromFile("../Textures/bomb.png");
+    sprite.setTexture(t);
+}
+
+bool Bomb::getIsAlive() { return isAlive; }
+
+sf::Rect<float> Bomb::getPosition() {
+    return sprite.getGlobalBounds();
+}
+
+void Bomb::draw(sf::RenderWindow &window) {
+    if (isAlive) {
+        window.draw(sprite);
     }
-
-public:
-    Bomb(float x, float y) {
-        this->x = x;
-        this->y = y;
-        loadTexture();
-        sprite.setPosition(x, y);
-        sprite.setScale(0.5, 0.5);
-    }
-
-    void blowUp() {
-        isAlive = false;
-    }
-
-    bool getIsAlive() { return isAlive; }
-
-    sf::Rect<float> getPosition() { return sprite.getGlobalBounds(); }
-
-    void draw(sf::RenderWindow &window) {
-        if (isAlive) {
-            window.draw(sprite);
-        }
-    }
-};
+}

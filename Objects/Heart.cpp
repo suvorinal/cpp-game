@@ -1,38 +1,31 @@
 #include <SFML/Graphics.hpp>
+#include "Heart.h"
 
-class Heart {
-private:
-    float x = 0, y = 0;
-    sf::Texture t;
-    sf::Sprite sprite;
+Heart::Heart(float x, float y) {
+    this->x = x;
+    this->y = y;
+    isAlive = true;
 
-    bool isAlive = true;
+    loadTexture();
+    sprite.setPosition(x, y);
+    sprite.setScale(0.5, 0.5);
+}
 
-    void loadTexture() {
-        t.loadFromFile("..\\Textures\\heart.png");
-        sprite.setTexture(t);
+void Heart::loadTexture() {
+    t.loadFromFile("../Textures/heart.png");
+    sprite.setTexture(t);
+}
+
+void Heart::heal() {
+    isAlive = false;
+}
+
+bool Heart::getIsAlive() { return isAlive; }
+
+sf::Rect<float> Heart::getPosition() { return sprite.getGlobalBounds(); }
+
+void Heart::draw(sf::RenderWindow &window) {
+    if (isAlive) {
+        window.draw(sprite);
     }
-
-public:
-    Heart(float x, float y) {
-        this->x = x;
-        this->y = y;
-        loadTexture();
-        sprite.setPosition(x, y);
-        sprite.setScale(0.5, 0.5);
-    }
-
-    void heal() {
-        isAlive = false;
-    }
-
-    bool getIsAlive() { return isAlive; }
-
-    sf::Rect<float> getPosition() { return sprite.getGlobalBounds(); }
-
-    void draw(sf::RenderWindow &window) {
-        if (isAlive) {
-            window.draw(sprite);
-        }
-    }
-};
+}
