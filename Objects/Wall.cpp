@@ -10,8 +10,8 @@ Wall::Wall() {
 void Wall::loadTexture() {
     wallT.loadFromFile("../Textures/wall.png");
     wall.setTexture(wallT);
-    wall.setScale(0.25, 0.25);
-    wall.setPosition(500, 685);
+    wall.setScale(0.33, 0.33);
+    wall.setPosition(1150, 124);
 }
 
 void Wall::hit(sf::Rect<float> playerRect) {

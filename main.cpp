@@ -32,6 +32,10 @@ int main()
     sf::Clock clock;
     sf::Time frameTime{ sf::Time::Zero };
 
+    sf::RectangleShape winRectangle;
+    winRectangle.setPosition(1248, 32);
+    winRectangle.setSize(sf::Vector2<float>(32, 192));
+
 
     while (window.isOpen()) {
         sf::Event event;
@@ -69,6 +73,11 @@ int main()
 
         player.update(frameTime.asMilliseconds());
         player.drag(pos.x - dX, pos.y - dY);
+
+        if (winRectangle.getGlobalBounds().intersects(player.getPosition())) {
+            return EXIT_SUCCESS;
+        }
+
         player.draw(window);
 
         for (Bomb* bomb : bombs) {
@@ -86,7 +95,6 @@ int main()
             }
             heart->draw(window);
         }
-
 
         frameTime = clock.restart();
         window.display();
